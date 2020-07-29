@@ -26,8 +26,7 @@ def getDate(date_name, options_date):
     print('date input error')
     exit(0)
 
-LOGIN_URL = 'https://bookseat.tkblearning.com.tw/book-seat/student/login'
-URL       = 'https://bookseat.tkblearning.com.tw/book-seat/student/bookSeat/index'
+LOGIN_URL = 'https://bookseat.tkblearning.com.tw/book-seat/student/login/toLogin'
 
 driverLocation = './chromedriver'
 options = Options()
@@ -35,40 +34,51 @@ options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 driver = webdriver.Chrome(executable_path=driverLocation, chrome_options=options) # 選擇Chrome瀏覽器
 driver.set_window_size(1024, 960)
+
+st = time.time()
+print('===start===', st - st)
 driver.get(LOGIN_URL)
+connect_time = time.time()
+print('===connected===', connect_time - st)
 
 driver.find_element_by_id('id').click()
 driver.find_element_by_id('pwd').click()
 
 
 driver.find_element_by_link_text('送出').click()
+
 get_submit_alert, sleep_times = False, 0
 while(not get_submit_alert):
-    if sleep_times >= 8:
-        print('no alert in login')
-        exit(0)
-    sleep_times += 1
+    #if sleep_times >= 8:
+    #    print('no alert in login')
+    #    exit(0)
+    #sleep_times += 1
     try:
         alogin = driver.switch_to_alert()
         print(alogin.text)
         alogin.accept()
         get_submit_alert = True
     except NoAlertPresentException:
-        time.sleep(1)
+        #time.sleep(1)
         pass
+
+driver.save_screenshot('test.png')
 #time.sleep(2)
 into_book_page, sleep_times = False, 0
 while(not into_book_page):
-    if sleep_times >= 8:
-        print('fail to login')
-        exit(0)
-    sleep_times += 1
+    #if sleep_times >= 8:
+    #    print('fail to login')
+    #    exit(0)
+    #sleep_times += 1
     try:
         driver.find_element_by_css_selector("select[id='class_selector']")
         into_book_page = True
     except NoSuchElementException:
-        time.sleep(1)
+        #time.sleep(1)
         pass
+
+into_time = time.time()
+print('===into_time===', into_time - st)
 
 driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
@@ -100,6 +110,9 @@ for checkbox in abled_checkboxs:
         checkbox.click()
         break
 
+ed = time.time()
+print('===end===', ed - st)
+exit(0)
 driver.find_element_by_link_text('送出').click()
 
 get_submit_alert = False
@@ -111,8 +124,6 @@ while(not get_submit_alert):
         get_submit_alert = True
     except NoAlertPresentException:
         pass
-
-driver.save_screenshot('test.png')
 
 get_submit_alert, final_sleep_times = False, 0
 while(not get_submit_alert):
