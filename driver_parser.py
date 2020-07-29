@@ -32,12 +32,14 @@ driverLocation = './chromedriver'
 options = Options()
 options.add_argument('--headless')
 options.add_argument('--no-sandbox')
+
 driver = webdriver.Chrome(executable_path=driverLocation, chrome_options=options) # 選擇Chrome瀏覽器
-driver.set_window_size(1024, 960)
+driver.set_window_size(480, 600)
 
 st = time.time()
 print('===start===', st - st)
 driver.get(LOGIN_URL)
+driver.save_screenshot('test.png')
 connect_time = time.time()
 print('===connected===', connect_time - st)
 
@@ -59,10 +61,10 @@ while(not get_submit_alert):
         alogin.accept()
         get_submit_alert = True
     except NoAlertPresentException:
-        #time.sleep(1)
+        time.sleep(1)
         pass
 
-driver.save_screenshot('test.png')
+
 #time.sleep(2)
 into_book_page, sleep_times = False, 0
 while(not into_book_page):
@@ -74,7 +76,7 @@ while(not into_book_page):
         driver.find_element_by_css_selector("select[id='class_selector']")
         into_book_page = True
     except NoSuchElementException:
-        #time.sleep(1)
+        time.sleep(1)
         pass
 
 into_time = time.time()
