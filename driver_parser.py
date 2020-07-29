@@ -5,6 +5,7 @@ from selenium.common.exceptions import NoAlertPresentException
 from selenium.common.exceptions import NoSuchElementException
 import time
 
+SLEEP_TIME = 12
 def getCourse(course_name, options_course):
     for coruse in options_course.options:
         if(coruse.text[:len(course_name)] == course_name):
@@ -39,7 +40,6 @@ driver.set_window_size(480, 600)
 st = time.time()
 print('===start===', st - st)
 driver.get(LOGIN_URL)
-driver.save_screenshot('test.png')
 connect_time = time.time()
 print('===connected===', connect_time - st)
 
@@ -51,10 +51,10 @@ driver.find_element_by_link_text('送出').click()
 
 get_submit_alert, sleep_times = False, 0
 while(not get_submit_alert):
-    #if sleep_times >= 8:
-    #    print('no alert in login')
-    #    exit(0)
-    #sleep_times += 1
+    if sleep_times >= SLEEP_TIME:
+        print('no alert in login')
+        exit(0)
+    sleep_times += 1
     try:
         alogin = driver.switch_to_alert()
         print(alogin.text)
@@ -68,10 +68,10 @@ while(not get_submit_alert):
 #time.sleep(2)
 into_book_page, sleep_times = False, 0
 while(not into_book_page):
-    #if sleep_times >= 8:
-    #    print('fail to login')
-    #    exit(0)
-    #sleep_times += 1
+    if sleep_times >= SLEEP_TIME:
+        print('fail to login')
+        exit(0)
+    sleep_times += 1
     try:
         driver.find_element_by_css_selector("select[id='class_selector']")
         into_book_page = True
@@ -79,6 +79,7 @@ while(not into_book_page):
         time.sleep(1)
         pass
 
+driver.save_screenshot('test.png')
 into_time = time.time()
 print('===into_time===', into_time - st)
 
@@ -117,19 +118,25 @@ print('===end===', ed - st)
 exit(0)
 driver.find_element_by_link_text('送出').click()
 
-get_submit_alert = False
+### Todo: sleep and wait for the alert
+get_submit_alert, sleep_times = False, 0
 while(not get_submit_alert):
+    if sleep_times >= SLEEP_TIME:
+        print('fail to confirm submit')
+        exit(0)
+    sleep_times += 1
     try:
         abook = driver.switch_to_alert()
         print(abook.text)
         abook.accept()
         get_submit_alert = True
     except NoAlertPresentException:
+        time.sleep(1)
         pass
 
 get_submit_alert, final_sleep_times = False, 0
 while(not get_submit_alert):
-    if(final_sleep_times >= 5):
+    if(final_sleep_times >= SLEEP_TIME):
         print('No final alert')
         exit(0)
     final_sleep_times += 1
@@ -142,6 +149,5 @@ while(not get_submit_alert):
         time.sleep(1)
         pass
 
-#time.sleep(2)
-#driver.switch_to_alert().accept()
-#time.sleep(2)
+### Todo: try 5 times until succeed with function call
+### Todo: scheduling and get config each trial
