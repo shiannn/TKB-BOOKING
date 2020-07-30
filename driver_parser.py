@@ -12,26 +12,41 @@ logging.basicConfig(stream=sys.stdout,
 format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
 SLEEP_TIME = 240
+RESTING = 300
 def getCourse(course_name, options_course):
     for coruse in options_course.options:
         if(coruse.text[:len(course_name)] == course_name):
             return coruse.text
-    print('course input error')
+    logging.warning('course input error')
     exit(0)
 
 def getPostion(position_name, options_pos):
     for position in options_pos.options:
         if(position.text[:len(position_name)] == position_name):
             return position.text
-    print('position input error')
+    logging.warning('position input error')
     exit(0)
 
 def getDate(date_name, options_date):
     for date in options_date.options:
         if(date.text[:len(date_name)] == date_name):
             return date.text
-    print('date input error')
+    logging.warning('date input error')
     exit(0)
+
+def checkInPage(driver):
+    #time.sleep(2)
+    into_book_page, sleep_times = False, 0
+    while(not into_book_page):
+        if sleep_times >= SLEEP_TIME:
+            return False
+        sleep_times += 1
+        try:
+            driver.find_element_by_css_selector("select[id='class_selector']")
+            into_book_page = True
+            return True
+        except NoSuchElementException:
+            time.sleep(1)
 
 LOGIN_URL = 'https://bookseat.tkblearning.com.tw/book-seat/student/login/toLogin'
 
@@ -42,16 +57,16 @@ def bookTKB():
     options.add_argument('--no-sandbox')
 
     driver = webdriver.Chrome(executable_path=driverLocation, chrome_options=options) # 選擇Chrome瀏覽器
-    driver.set_window_size(480, 600)
+    driver.set_window_size(400, 1800)
 
     with open('/home/ray/Desktop/python/parser/config.json', 'r') as f:
         config = json.load(f)
 
     st = time.time()
-    print('===start===', st - st)
+    logging.warning('=== start {} ==='.format(st - st))
     driver.get(LOGIN_URL)
     connect_time = time.time()
-    print('===connected===', connect_time - st)
+    logging.warning('=== connected {} ==='.format(connect_time - st))
 
     driver.find_element_by_id('id').click()
     driver.find_element_by_id('pwd').click()
@@ -62,7 +77,7 @@ def bookTKB():
     get_submit_alert, sleep_times = False, 0
     while(not get_submit_alert):
         if sleep_times >= SLEEP_TIME:
-            print('no alert in login')
+            logging.warning('no alert in login')
             exit(0)
         sleep_times += 1
         try:
@@ -74,23 +89,27 @@ def bookTKB():
             time.sleep(1)
             pass
 
-
-    #time.sleep(2)
-    into_book_page, sleep_times = False, 0
-    while(not into_book_page):
-        if sleep_times >= SLEEP_TIME:
-            print('fail to login')
-            exit(0)
-        sleep_times += 1
-        try:
-            driver.find_element_by_css_selector("select[id='class_selector']")
-            into_book_page = True
-        except NoSuchElementException:
-            time.sleep(1)
-            pass
+    inCoursePage = checkInPage(driver)
+    if not inCoursePage:
+        logging.warning('fail to in course page')
+        exit(0)
 
     into_time = time.time()
-    print('===into_time===', into_time - st)
+    #print('===into_time===', )
+    logging.warning('=== into_time {} ==='.format(into_time - st))
+    logging.warning('[sleeping {} minutes...]'.format(RESTING / 60))
+    time.sleep(RESTING)
+    logging.warning('[wake up and clean refresh course...]')
+
+    ### push clear
+    driver.find_element_by_link_text('清除').click()
+
+    clearCoursePage = checkInPage(driver)
+    if not clearCoursePage:
+        logging.warning('fail to clear course page')
+        exit(0)
+
+    driver.save_screenshot('/home/ray/Desktop/python/parser/clear.png')
 
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
@@ -98,19 +117,19 @@ def bookTKB():
     options_course = Select(select_course)
     course_name = getCourse(config["course"], options_course)
     options_course.select_by_visible_text(course_name)
-    print(course_name)
+    logging.warning(course_name)
 
     select_date = driver.find_element_by_css_selector("select[id='date_selector']")
     options_date = Select(select_date)
     date_name = getDate(config["date"], options_date)
     options_date.select_by_visible_text(date_name)
-    print(date_name)
+    logging.warning(date_name)
 
     select_branch = driver.find_element_by_css_selector("select[id='branch_selector']")
     options_branch = Select(select_branch)
     position_name = getPostion(config["position"], options_branch)
     options_branch.select_by_visible_text(position_name)
-    print(position_name)
+    logging.warning(position_name)
 
     all_checkboxs=driver.find_elements_by_css_selector('input[type=checkbox]')
     disabled_checkboxs=driver.find_elements_by_css_selector('input[type=checkbox][disabled]')
@@ -125,13 +144,14 @@ def bookTKB():
             checked = True
             break
 
+    driver.save_screenshot('/home/ray/Desktop/python/parser/test.png')
+
     if not checked:
-        print('no more session')
+        logging.warning('no more session')
         exit(0)
 
     ed = time.time()
-    print('===end===', ed - st)
-    driver.save_screenshot('/home/ray/Desktop/python/parser/test.png')
+    logging.warning('=== end {} ==='.format(ed - st))
     driver.find_element_by_link_text('送出').click()
 
     ### Todo: sleep and wait for the alert
