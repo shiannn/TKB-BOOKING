@@ -3,7 +3,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import NoAlertPresentException
 from selenium.common.exceptions import NoSuchElementException
-import time
+import datetime, time
 import json
 
 import logging
@@ -12,7 +12,6 @@ logging.basicConfig(stream=sys.stdout,
 format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
 SLEEP_TIME = 240
-RESTING = 300
 def getCourse(course_name, options_course):
     for coruse in options_course.options:
         if(coruse.text[:len(course_name)] == course_name):
@@ -94,11 +93,20 @@ def bookTKB():
         logging.warning('fail to in course page')
         exit(0)
 
-    into_time = time.time()
-    #print('===into_time===', )
-    logging.warning('=== into_time {} ==='.format(into_time - st))
-    logging.warning('[sleeping {} minutes...]'.format(RESTING / 60))
-    time.sleep(RESTING)
+    
+    logging.warning('=== into_time ===')
+    today = datetime.datetime.now()
+    if today < datetime.datetime(today.year, today.month, today.day, 12, 0, 0):
+        # morning, booking noon
+        rest_time = (datetime.datetime(today.year, today.month, today.day, 12, 0, 0) - today).seconds + 1
+    else:
+        # afternoon, booking midnight
+        rest_time = (datetime.datetime(today.year, today.month, today.day, 23, 59, 59) - today).seconds + 2
+
+    driver.save_screenshot('/home/ray/Desktop/python/parser/login.png')
+    
+    logging.warning('[sleeping {} minutes...]'.format(rest_time / 60))
+    time.sleep(rest_time)
     logging.warning('[wake up and clean refresh course...]')
 
     ### push clear
