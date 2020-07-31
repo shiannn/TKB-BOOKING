@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+    </head>
+    <body>
+        <h1>Home Page</h1>
+        <p>Course:   {{ post.course }}</p>
+        <p>Date:     {{ post.date }}</p>
+        <p>Position: {{ post.position }}</p>
+        <p>Last update: {{ post.last_update }}</p>
+        
+        <form method="POST">
+            <div class="field">
+                <label for="course" class="label">Course</label>
+                <div class="control">
+                  <input type="text" name="course" class="input" required="required"/>
+                </div>
+            </div>
+        
+            <div class="field">
+                <label for="date" class="label">Date</label>
+                <div class="control">
+                    <input type="date" name="date" class="input" required="required"/>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="position" class="label">Position</label>
+                <div class="control">
+                    <input type="text" name="position" class="input" required="required"/>
+                </div>
+            </div>
+
+            <div class="field is-grouped">
+                <div class="control">
+                  <button class="button is-primary is-small">Save</button>
+                </div>
+            </div>
+        </form>
+    </body>
+</html>
