@@ -6,8 +6,8 @@ from selenium.common.exceptions import NoSuchElementException
 import datetime, time
 import json
 
-from apscheduler.scheduler import Scheduler
-#from apscheduler.schedulers.blocking import BlockingScheduler
+#from apscheduler.scheduler import Scheduler
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 import logging
 import sys
@@ -278,13 +278,24 @@ def main():
     bookTKB('Normal')
 
 def main_schedule():
-    sched = Scheduler()
+    sched = BlockingScheduler()
+
+    sched.add_job(bookTKB, trigger='cron', hour=23, minute=50, args=('Cron',))
+    sched.add_job(bookTKB, trigger='cron', hour=11, minute=50, args=('Cron',))
+    logging.warning('running...')
     sched.start()
 
-    sched.add_cron_job(bookTKB, hour=1, minute=35, mode='Cron')
-    logging.warning('running...')
-
+import argparse
     
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--schedule", help="if using schedule",
+        action="store_true")
+    args = parser.parse_args()
+
     LOGIN_URL = 'https://bookseat.tkblearning.com.tw/book-seat/student/login/toLogin'
-    main()
+
+    if args.schedule:
+        main_schedule()
+    else:
+        main()
