@@ -6,9 +6,6 @@ from selenium.common.exceptions import NoSuchElementException
 import datetime, time
 import json
 
-import psycopg2
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from apscheduler.scheduler import Scheduler
 #from apscheduler.schedulers.blocking import BlockingScheduler
 
@@ -24,18 +21,9 @@ try:
         USERID = access['USERID']
         PASSWORD = access['PASSWORD']
         DRIVERLOCATION = access['DRIVERLOCATION']
-        SQLALCHEMY_DATABASE_URI = access['SQLALCHEMY_DATABASE_URI']
 except:
     logging.warning('Please Add access json')
     exit(0)
-
-"""
-USERID = os.environ.get('USERID')
-PASSWORD = os.environ.get('PASSWORD')
-DRIVERLOCATION = os.environ.get('CHROMEDRIVER_PATH')
-GOOGLE_CHROME_BIN = os.environ.get("GOOGLE_CHROME_BIN")
-SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
-"""
 
 SLEEP_TIME = 240
 REST_THRESHOLD = 600
@@ -88,40 +76,13 @@ def checkInLogin(driver):
         except NoSuchElementException:
             time.sleep(1)
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
-app.config['SQLALCHEMY_DATABASE_URISQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-
-class Booking(db.Model):
-    """ Booking model """
-
-    __tablename__ = "Booking"
-    id = db.Column(db.Integer, primary_key=True)
-    course = db.Column(db.String(), nullable=False)
-    date = db.Column(db.String(), nullable=False) # unique
-    position = db.Column(db.String(), nullable=False)
-    last_update = db.Column(db.String(), nullable=False)
-
-    def __init__(self, course, date, position, last_update):
-        self.course = course
-        self.date = date
-        self.position = position
-        self.last_update = last_update
-    
-    def __repr__(self):
-        return "Booking {} {} {}".format(self.course, self.date, self.position)
-
 def getConfig():
-    query = Booking.query.first()
-    config = {
-        'course':query.course,
-        'date':query.date,
-        'position':query.position
-    }
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+    
     return config
 
-def bookTKB():
+def bookTKB(mode='Normal'):
     logging.warning('[TKB booking...]')
 
     options = Options()
@@ -186,10 +147,11 @@ def bookTKB():
         # afternoon, booking midnight
         rest_time = (datetime.datetime(today.year, today.month, today.day, 23 - TIME_DELTA, 59, 59) - today).total_seconds() + 2
     
-    if rest_time > REST_THRESHOLD or rest_time < 0:
-        logging.warning('something wrong on rest')
-        driver.quit()
-        return False
+    if mode == 'Cron':
+        if rest_time > REST_THRESHOLD or rest_time < 0:
+            logging.warning('something wrong on rest')
+            driver.quit()
+            return False
 
     driver.save_screenshot('login.png')
     
@@ -312,21 +274,15 @@ def printHello():
     return
 
 def main():
-    sched = Scheduler()
-    #sched = BlockingScheduler()
-    sched.start()
-    sched.add_cron_job(bookTKB, hour=11, minute=50)
-    sched.add_cron_job(bookTKB, hour=23, minute=50)
-
-    sched.add_cron_job(bookTKB, hour=1, minute=35)
-    #sched.add_cron_job(bookTKB, hour=16, minute=50)
-    #sched.add_job(bookTKB, 'cron', hour=3, minute=55)
-    #sched.add_job(bookTKB, 'cron', hour=15, minute=55)
-    #sched.add_job(bookTKB, 'cron', hour=8, minute=12)
     logging.warning('running...')
+    bookTKB('Normal')
 
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+def main_schedule():
+    sched = Scheduler()
+    sched.start()
+
+    sched.add_cron_job(bookTKB, hour=1, minute=35, mode='Cron')
+    logging.warning('running...')
 
     
 if __name__ == '__main__':
