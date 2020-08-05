@@ -125,7 +125,7 @@ def bookTKB():
     logging.warning('[TKB booking...]')
 
     options = Options()
-    #options.add_argument('--headless')
+    options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     #options.binary_location = GOOGLE_CHROME_BIN
 
@@ -312,9 +312,6 @@ def printHello():
     return
 
 def main():
-    bookTKB()
-
-def main2():
     sched = Scheduler()
     #sched = BlockingScheduler()
     sched.start()
